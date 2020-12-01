@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var IOT = require('../models/iot.model');
+var Model = require('../models/user.model');
 
 /* GET home page. */
 router.get('/', async(req, res) => {
@@ -19,6 +20,29 @@ router.get("/:id", async(req, res) => {
         res.send(result);
     } catch (error) {
         console.log(error)
+        res.status(400).send(error);
+    }
+})
+
+
+router.post("/", async(req, res) => {
+    try {
+        let rs = new IOT(req.body);
+        let result = await rs.save();
+        res.send(result);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+})
+
+router.put("/:id", async(req, res) => {
+    try {
+        let value = await IOT.findById(req.params.id).exec();
+        value.set(req.body);
+        let result = await value.save();
+        res.send(result);
+    } catch (error) {
+        console.log(error);
         res.status(400).send(error);
     }
 })

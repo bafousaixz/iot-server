@@ -8,9 +8,6 @@ const StationsSchema = new Schema({
         unique: true,
         required: true
     },
-    machine_id: {
-        type: String,
-    },
     name: {
         type: String,
     },

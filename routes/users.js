@@ -7,7 +7,7 @@ router.post('/', async(req, res) => {
     // Create a new user
     try {
         const user = new Model(req.body);
-        user.role = 1;
+        user.role = 0;
         await user.save();
         const token = await user.generateAuthToken();
         res.status(201).send({ user, token });
