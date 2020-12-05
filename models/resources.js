@@ -8,9 +8,6 @@ const StationsSchema = new Schema({
         unique: true,
         required: true
     },
-    name: {
-        type: String,
-    },
     place: {
         type: String,
     },

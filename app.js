@@ -13,12 +13,16 @@ var resourceRouter = require('./routes/resources');
 var app = express();
 
 //connect DB
+var uri = "mongodb+srv://kuon5895:kuon5895@cluster0.rqptm.mongodb.net/test";
 var url = 'mongodb://localhost:27017/mydb';
-db = Mongoose.connect(url, {
+db = Mongoose.connect(uri, {
     useNewUrlParser: true,
     useCreateIndex: true,
 })
-
+// const port = process.env.port || 3000;
+// app.listen(port, () => {
+//     console.log("What the f")
+// })
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
