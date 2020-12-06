@@ -51,7 +51,7 @@ router.get('/me', auth, async(req, res) => {
     res.send(req.user);
 })
 
-router.get('/list/', async(req, res) => {
+router.get('/list/:id', async(req, res) => {
     try {
         const id = req.params.id;
         const user = await Model.findById(id).exec();
