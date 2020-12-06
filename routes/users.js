@@ -2,7 +2,23 @@ var express = require('express');
 var router = express.Router();
 var auth = require('../middleware/auth');
 var Model = require('../models/user.model');
-
+var AWS = require('aws-sdk');
+// var config = require('../s3_config.json')
+// AWS.config.loadFromPath;
+// AWS.config.update(
+//     {
+//         // "BUCKET": "dut-iot-image",
+//         "REGION": "US East (Ohio) us-east-2",
+//         "AWS_ACCESS_KEY": "AKIAQ2I6BF3TDH45OGLJ",
+//         "AWS_SECRET_KEY": "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"
+//     }
+// );
+// var s3Bucket = new AWS.S3( { params: {Bucket: 'dut-iot-image'} } );
+let s3Bucket = new AWS.S3({
+    accessKeyId: "AKIAQUYJ6XTNNZWXTEFL",
+    secretAccessKey: "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",
+    region: "ap-southeast-1"
+  });
 router.post('/', async(req, res) => {
     // Create a new user
     try {
@@ -35,7 +51,7 @@ router.get('/me', auth, async(req, res) => {
     res.send(req.user);
 })
 
-router.get('/list/:id', async(req, res) => {
+router.get('/list/', async(req, res) => {
     try {
         const id = req.params.id;
         const user = await Model.findById(id).exec();
@@ -48,6 +64,8 @@ router.get('/list/:id', async(req, res) => {
         } else {
             res.send('not have access');
         }
+        // const result = await Model.find().exec();
+        // res.send(result);
     } catch (error) {
         res.status(400).send(error);
     }
@@ -55,14 +73,37 @@ router.get('/list/:id', async(req, res) => {
 
 
 router.put('/me', auth, async(req, res) => {
-    try {
+    // console.log(req.body.image)
+    buf = Buffer.from(req.body.image.replace(/^data:image\/\w+;base64,/, ""),'base64')
+    const type = req.body.image.split(';')[0].split('/')[1];
+    const data = {
+        Bucket: 'haiconmeo-static/cuong-image',
+        Key: `${req.body._id}`,
+        Body: buf,
+        ContentEncoding: 'base64',
+        ContentType: `image/${type}`
+    };
+    s3Bucket.putObject(data, (err, data) =>{
+        if (err) { 
+            console.log(err);
+            console.log('Error uploading data: ', data); 
+        } else {
+            console.log('successfully uploaded the image!', data.Location);
+        }
+    });
         const u = req.user;
         u.set(req.body);
+        Object.assign(u, { image: `https://haiconmeo-static.s3-ap-southeast-1.amazonaws.com/cuong-image/${req.body._id}` });
         const result = await u.save();
         res.send(result);
-    } catch (error) {
-        res.status(400).send(error);
-    }
+    // try {
+    //     const u = req.user;
+    //     u.set(req.body);
+    //     const result = await u.save();
+    //     res.send(result);
+    // } catch (error) {
+    //     res.status(400).send(error);
+    // }
 })
 
 router.post('/me/logout', auth, async(req, res) => {
