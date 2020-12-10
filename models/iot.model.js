@@ -18,30 +18,14 @@ const IOT = new Schema({
         type: Number,
         required: true
     },
-    // control: {
-    //     type: Number,
-    //     required: true
-    // },
-    // vdc: {
-    //     type: Number,
-    //     required: true
-    // },
     detect_content: {
         type: String,
         required: true
     },
-    // duration: {
-    //     type: String,
-    //     required: true
-    // },
     filename: {
         type: String,
         required: true
     },
-    // filepath: {
-    //     type: String,
-    //     required: true
-    // },
     time: {
         type: Number,
         required: true

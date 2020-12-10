@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var auth = require('../middleware/auth');
+var auths = require('../models/auth');
 var Model = require('../models/user.model');
 var AWS = require('aws-sdk');
 // var config = require('../s3_config.json')
@@ -22,9 +23,13 @@ let s3Bucket = new AWS.S3({
 router.post('/', async(req, res) => {
     // Create a new user
     try {
-        const user = new Model(req.body);
-        user.role = 0;
-        await user.save();
+        const { lastName, username, password, image } = req.body
+        const user = new Model({username, password});
+        const auth = new auths({lastName, image})
+        const result = await user.save();
+        auth.role = 1;
+        auth.userId = result._id;
+        await auth.save();
         const token = await user.generateAuthToken();
         res.status(201).send({ user, token });
     } catch (error) {
@@ -48,24 +53,26 @@ router.post('/login', async(req, res) => {
 })
 
 router.get('/me', auth, async(req, res) => {
-    res.send(req.user);
+    const users = await auths.find({ userId: req.user._id }).exec();
+    user = users[0]
+    res.send(user);
 })
 
 router.get('/list/:id', async(req, res) => {
     try {
         const id = req.params.id;
-        const user = await Model.findById(id).exec();
-        if (user.role === 1) {
-            const result = await Model.find().exec();
+        console.log(id)
+        const user = await auths.find({ userId: id }).exec();
+        console.log(user)
+        if (user[0].role === 1) {
+            const result = await auths.find().exec();
             const users = result.filter(data => {
                 return data._id.toString() !== id.toString()
             })
-            res.send(users);
+            res.send(result);
         } else {
             res.send('not have access');
         }
-        // const result = await Model.find().exec();
-        // res.send(result);
     } catch (error) {
         res.status(400).send(error);
     }
@@ -74,24 +81,28 @@ router.get('/list/:id', async(req, res) => {
 
 router.put('/me', auth, async(req, res) => {
     // console.log(req.body.image)
-    buf = Buffer.from(req.body.image.replace(/^data:image\/\w+;base64,/, ""),'base64')
-    const type = req.body.image.split(';')[0].split('/')[1];
-    const data = {
-        Bucket: 'haiconmeo-static/cuong-image',
-        Key: `${req.body._id}`,
-        Body: buf,
-        ContentEncoding: 'base64',
-        ContentType: `image/${type}`
-    };
-    s3Bucket.putObject(data, (err, data) =>{
-        if (err) { 
-            console.log(err);
-            console.log('Error uploading data: ', data); 
-        } else {
-            console.log('successfully uploaded the image!', data.Location);
-        }
-    });
-        const u = req.user;
+    if (req.body.image) {
+        buf = Buffer.from(req.body.image.replace(/^data:image\/\w+;base64,/, ""),'base64')
+        const type = req.body.image.split(';')[0].split('/')[1];
+        const data = {
+            Bucket: 'haiconmeo-static/cuong-image',
+            Key: `${req.body._id}`,
+            Body: buf,
+            ContentEncoding: 'base64',
+            ContentType: `image/${type}`
+        };
+        s3Bucket.putObject(data, (err, data) =>{
+            if (err) { 
+                console.log(err);
+                console.log('Error uploading data: ', data); 
+            } else {
+                console.log('successfully uploaded the image!', data.Location);
+            }
+        });
+    }
+        // const u = req.user;
+        const uarr = await auths.find({ userId: req.user._id }).exec();
+        u = uarr[0]
         u.set(req.body);
         Object.assign(u, { image: `https://haiconmeo-static.s3-ap-southeast-1.amazonaws.com/cuong-image/${req.body._id}` });
         const result = await u.save();
@@ -133,7 +144,8 @@ router.post('/me/logoutall', auth, async(req, res) => {
 router.delete('/:id', async(req, res) => {
     try {
         const id = req.params.id;
-        const result = await Model.deleteOne({ _id: id }).exec();
+        console.log(id)
+        const result = await auths.deleteOne({ userId: id }).exec();
         res.send(result);
     } catch (error) {
         res.status(500).send(error);

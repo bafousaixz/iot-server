@@ -14,37 +14,7 @@ const UserModel = new Schema({
         type: String,
         required: true
     },
-
-    role: {
-        type: Number,
-        required: true
-    },
-
-    firstName: {
-        type: String,
-        required: false
-    },
-
-    lastName: {
-        type: String,
-        required: true
-    },
-
-    email: {
-        type: String,
-        required: false
-    },
-
-    tel: {
-        type: String,
-        required: false
-    },
-
-    image: {
-        type: String,
-        required: false
-    },
-
+    
     tokens: [{
         token: {
             type: String,
